@@ -49,7 +49,7 @@ pX[["Intra_Hi"]] <- pXD[2]
 
 #### 3. Parameters Gibbs sampler ####
 nBurn <- 1e3			# No. of burnin iterations
-nIt <- 1e3#1e4			# No. of iterations
+nIt <- 1e4			# No. of iterations
 Start <- c(0,0.5)		# Starting values for chains 1 and 2
 GR.Cut <- 1.10			# Cutoff value for (non-)convergence
 

@@ -218,8 +218,10 @@ pReject.Trial_RS <- pReject.Trial_RS[c(matrix(1:nrow(pReject.Trial_RS), nrow = 2
 Ind_Val <- grep("Value", colnames(pReject.Trial_RS))
 Ind_Ana <- grep("Analytical", colnames(pReject.Trial_RS))
 Ind_Emp <- grep("Empirical", colnames(pReject.Trial_RS))
-Ind_Cols <- replace(1:ncol(pReject.Trial_RS), c(Ind_Val,Ind_Emp,Ind_Ana), c(Ind_Emp,Ind_Ana,Ind_Val))
-Names.Cols <- c("Reference", "Empirical", "Analytical", "Value")
+Ind_Cols <- replace(1:ncol(pReject.Trial_RS), c(Ind_Val,Ind_Emp), c(Ind_Emp,Ind_Val))[-Ind_Ana]
+#Ind_Cols <- replace(1:ncol(pReject.Trial_RS), c(Ind_Val,Ind_Emp,Ind_Ana), c(Ind_Emp,Ind_Ana,Ind_Val))
+Names.Cols <- c("Reference", "Empirical",# "Analytical", 
+                "Value")
 pReject.Trial_RS <- pReject.Trial_RS[,Ind_Cols]
 
 
@@ -250,20 +252,23 @@ pReject.Trial.Print <- t(sapply(1:(nDgm * length(Rules)), function(dgm) {
 tabPRejectTrial <- cbind.data.frame(DgmNames, pReject.Trial.Print)
 
 AddToRow.pReject.Trial <- list()
-AddToRow.pReject.Trial$pos <- as.list(seq(0,nDgm * length(Rules), nDgm))
-AddToRow.pReject.Trial$command <- c(paste0(c(" ", rep("\\midrule \n ", length(Rules) - 1)), 
+AddToRow.pReject.Trial$pos <- as.list(c(0,seq(0,nDgm * length(Rules)-1, nDgm)))
+AddToRow.pReject.Trial$command <- c(paste0(paste0(paste0(" & & \\multicolumn{2}{l}{", Names.Cols, "}", collapse = ""), " \\\\\n "),
+                                    paste0("DGM", 
+                                           paste0(
+                                                  " & ", rep(c(" & \\multicolumn{1}{l}{p} & \\multicolumn{1}{l}{SE}"), 
+                                                             times = max(sapply(1:nDgm, function(dgm) 
+                                                               length(intersect(IndicesML[[2]], which(Types[,"Populations"] == "Trial" & Types[,"Methods"] != "Analytical")))))), collapse = ""), " \\\\\n ", collapse = ""), collapse = ""),
+                                    paste0(rep("\\midrule \n ", length(Rules)), 
                                            "\\multicolumn{", ncol(pReject.Trial.Print) + 
-                                             1, "}{c}{Rule = ", Rules, "} \\\\\n \\midrule \n", 
-                                           paste0(paste0(" & & \\multicolumn{2}{l}{", Names.Cols, "}", collapse = ""), " \\\\\n "),
-                                           paste0("DGM", 
-                                                  paste0(" & ", rep(c(" & \\multicolumn{1}{l}{p} & \\multicolumn{1}{l}{SE}"), 
-                                                                    times = max(sapply(1:nDgm, function(dgm) 
-                                                                      length(intersect(IndicesML[[2]], which(Types[,"Populations"] == "Trial")))))), collapse = ""), " \\\\\n ", collapse = ""), 
-                                           c(" ", rep("\\midrule \n ", length(Rules) - 1))),
-                                    paste0("\\midrule \n \\multicolumn{", ncol(pReject.Trial.Print) + 1, "}{l}{p = proportion of samples that concluded superiority} \\\\ \n 
-                                           \\multicolumn{", ncol(pReject.Trial.Print) + 1, "}{l}{SE = standard error} \\\\ \n 
-                                           \\multicolumn{", ncol(pReject.Trial.Print) + 1, "}{l}{Bold-faced proportions represent correct rejections (i.e. power).} \\\\ \n "))
-Align.pReject.Trial <- paste0("ll", paste(rep("p{0.02cm}rr", length(intersect(IndicesML[[2]], which(Types[,"Populations"] == "Trial")))), collapse = ""))
+                                             1, "}{c}{Rule = ", Rules, "} \\\\\n",
+                                             c("", rep("\\midrule \n", length(Rules)-1)) 
+                                     )
+                                    #paste0("\\midrule \n \\multicolumn{", ncol(pReject.Trial.Print) + 1, "}{l}{p = proportion of samples that concluded superiority} \\\\ \n 
+                                    #       \\multicolumn{", ncol(pReject.Trial.Print) + 1, "}{l}{SE = standard error} \\\\ \n 
+                                    #       \\multicolumn{", ncol(pReject.Trial.Print) + 1, "}{l}{Bold-faced proportions represent correct rejections (i.e. power).} \\\\ \n ")
+                                    )
+Align.pReject.Trial <- paste0("ll", paste(rep("p{0.02cm}rr", length(intersect(IndicesML[[2]], which(Types[,"Populations"] == "Trial" & Types[,"Methods"] != "Analytical")))), collapse = ""))
 
 print(xtable(tabPRejectTrial, 
              caption= Captions["ATE"],
@@ -341,14 +346,18 @@ pReject.Intra_Lo_RS <- pReject.Intra_Lo_RS[c(matrix(1:nrow(pReject.Intra_Lo_RS),
 Ind_Val <- grep("Value", colnames(pReject.Intra_Lo_RS))
 Ind_Ana <- grep("Analytical", colnames(pReject.Intra_Lo_RS))
 Ind_Emp <- grep("Empirical", colnames(pReject.Intra_Lo_RS))
-Ind_Cols <- replace(1:ncol(pReject.Intra_Lo_RS), c(Ind_Val,Ind_Emp,Ind_Ana), c(Ind_Emp,Ind_Ana,Ind_Val))
+Ind_Cols <- replace(1:ncol(pReject.Intra_Lo_RS), c(Ind_Val,Ind_Emp), c(Ind_Emp,Ind_Val))[-Ind_Ana]
+Names.Cols <- c("Reference", "Empirical",# "Analytical", 
+                "Value")
+
 pReject.Intra_Lo_RS <- pReject.Intra_Lo_RS[,Ind_Cols]
 
 #### 2.2.1 Conditional treatment effect (low) - Latex table ####
 pReject.Intra_Lo <- pReject.Intra_Lo_RS
 label.CTE <- "tab:pReject.CTE.RS"
 
-Names.Cols <- c( "Reference", "Empirical",  "Analytical", "Value")
+Names.Cols <- c( "Reference", "Empirical", # "Analytical", 
+                 "Value")
 pReject.Intra_Lo.Print <- do.call(rbind, lapply(seq_along(Rules), function(rule) {
   pReject.Intra_Lo[,((rule-1) * ncol(pReject.Intra_Lo) / length(Rules) + 1):(rule * ncol(pReject.Intra_Lo) / length(Rules))]}))
 
@@ -371,21 +380,26 @@ pReject.Intra_Lo.Print <- t(sapply(1:(nDgm * length(Rules)), function(dgm) {
 
 tabPRejectIntra_Lo <- cbind.data.frame(DgmNames, pReject.Intra_Lo.Print)
 
+
 AddToRow.pReject.Intra_Lo <- list()
-AddToRow.pReject.Intra_Lo$pos <- as.list(seq(0,nDgm * length(Rules), nDgm))
-AddToRow.pReject.Intra_Lo$command <- c(paste0(c(" ", rep("\\midrule \n ", length(Rules) - 1)), 
-                                              "\\multicolumn{", ncol(pReject.Intra_Lo.Print) + 
-                                                1, "}{c}{Rule = ", Rules, "} \\\\\n \\midrule \n", 
-                                              paste0(paste0(" & & \\multicolumn{2}{l}{", Names.Cols, "}", collapse = ""), " \\\\\n "),
-                                              paste0("DGM", 
-                                                     paste0(" & ", rep(c(" & \\multicolumn{1}{l}{p} & \\multicolumn{1}{l}{SE}"), 
-                                                                       times = max(sapply(1:nDgm, function(dgm) 
-                                                                         length(intersect(IndicesML[[2]], which(Types[,"Populations"] == "Intra_Lo")))))), collapse = ""), " \\\\\n ", collapse = ""), 
-                                              c(" ", rep("\\midrule \n ", length(Rules) - 1))),
-                                       paste0("\\midrule \n \\multicolumn{", ncol(pReject.Trial.Print) + 1, "}{l}{p = proportion of samples that concluded superiority} \\\\ \n 
-                                           \\multicolumn{", ncol(pReject.Trial.Print) + 1, "}{l}{SE = standard error} \\\\ \n 
-                                           \\multicolumn{", ncol(pReject.Trial.Print) + 1, "}{l}{Bold-faced proportions represent correct rejections (i.e. power).} \\\\ \n "))
-Align.pReject.Intra_Lo <- paste0("ll", paste(rep("p{0.02cm}rr", length(intersect(IndicesML[[2]], which(Types[,"Populations"] == "Intra_Lo")))), collapse = ""))
+AddToRow.pReject.Intra_Lo$pos <- as.list(c(0,seq(0,nDgm * length(Rules)-1, nDgm)))
+AddToRow.pReject.Intra_Lo$command <- c(paste0(paste0(paste0(" & & \\multicolumn{2}{l}{", Names.Cols, "}", collapse = ""), " \\\\\n "),
+                                           paste0("DGM", 
+                                                  paste0(
+                                                    " & ", rep(c(" & \\multicolumn{1}{l}{p} & \\multicolumn{1}{l}{SE}"), 
+                                                               times = max(sapply(1:nDgm, function(dgm) 
+                                                                 length(intersect(IndicesML[[2]], which(Types[,"Populations"] == "Intra_Lo" & Types[,"Methods"] != "Analytical")))))), collapse = ""), " \\\\\n ", collapse = ""), collapse = ""),
+                                    paste0(rep("\\midrule \n ", length(Rules)), 
+                                           "\\multicolumn{", ncol(pReject.Intra_Lo.Print) + 
+                                             1, "}{c}{Rule = ", Rules, "} \\\\\n", 
+                                             c("", rep(" \\midrule \n", length(Rules)-1)) 
+                                    )
+                                    #paste0("\\midrule \n \\multicolumn{", ncol(pReject.Intra_Lo.Print) + 1, "}{l}{p = proportion of samples that concluded superiority} \\\\ \n 
+                                    #       \\multicolumn{", ncol(pReject.Intra_Lo.Print) + 1, "}{l}{SE = standard error} \\\\ \n 
+                                    #       \\multicolumn{", ncol(pReject.Intra_Lo.Print) + 1, "}{l}{Bold-faced proportions represent correct rejections (i.e. power).} \\\\ \n ")
+)
+Align.pReject.Intra_Lo <- paste0("ll", paste(rep("p{0.02cm}rr", length(intersect(IndicesML[[2]], which(Types[,"Populations"] == "Intra_Lo" & Types[,"Methods"] != "Analytical")))), collapse = ""))
+
 
 print(xtable(tabPRejectIntra_Lo, 
              caption=Captions["CTE"],
@@ -409,7 +423,8 @@ Pop <- sapply(PopTypes, function(x) get0(x), USE.NAMES = TRUE)
 
 SupSpaces <- c("Any", "All", "Comp")
 Rules <- c("Any", "All", "Compensatory")
-Names.Cols <- c("Reference", "Empirical", "Analytical", "Value")
+Names.Cols <- c("Reference", "Empirical",# "Analytical", 
+                "Value")
 Ind_Comp_rs <- do.call(rbind, lapply(1:nDgm, function(dgm) ifelse(any(grepl("Comp_rs", names(nSample[[dgm]]))), grep("Comp_rs", names(nSample[[dgm]])), grep(nMax, nSample[[dgm]]))))
 Ind_All_rs <- do.call(rbind, lapply(1:nDgm, function(dgm) ifelse(any(grepl("All_rs", names(nSample[[dgm]]))), grep("All_rs", names(nSample[[dgm]])), grep(nMax, nSample[[dgm]]))))
 Ind_Any_rs <- do.call(rbind, lapply(1:nDgm, function(dgm)ifelse(any(grepl("Any_rs", names(nSample[[dgm]]))), grep("Any_rs", names(nSample[[dgm]])), grep(nMax, nSample[[dgm]]))))
@@ -485,8 +500,10 @@ Ind_Val <- lapply(Bias.Trial_RS, function(x) grep("Value", colnames(x)))
 Ind_Ana <- lapply(Bias.Trial_RS, function(x) grep("Analytical", colnames(x)))
 Ind_Emp <- lapply(Bias.Trial_RS, function(x) grep("Empirical", colnames(x)))
 Ind_Cols <- lapply(1:length(Bias.Trial_RS), function(x) replace(1:ncol(Bias.Trial_RS[[x]]),
-                                                                   c(Ind_Val[[x]],Ind_Emp[[x]],Ind_Ana[[x]]), 
-                                                                   c(Ind_Emp[[x]],Ind_Ana[[x]],Ind_Val[[x]])))
+                                                                   c(Ind_Val[[x]],Ind_Emp[[x]],Ind_Ana[[x]]
+                                                                     ), 
+                                                                   c(Ind_Emp[[x]],Ind_Ana[[x]],
+                                                                     Ind_Val[[x]]))[-Ind_Ana[[x]]])
 Bias.Trial_RS <- lapply(1:length(Bias.Trial_RS), function(x) Bias.Trial_RS[[x]][,Ind_Cols[[x]]])
 
 #### 3.2 Conditional treatment effect (low)  ####
@@ -575,8 +592,9 @@ Ind_Val <- lapply(Bias.Intra_Lo_RS, function(x) grep("Value", colnames(x)))
 Ind_Ana <- lapply(Bias.Intra_Lo_RS, function(x) grep("Analytical", colnames(x)))
 Ind_Emp <- lapply(Bias.Intra_Lo_RS, function(x) grep("Empirical", colnames(x)))
 Ind_Cols <- lapply(1:length(Bias.Intra_Lo_RS), function(x) replace(1:ncol(Bias.Intra_Lo_RS[[x]]),
-                                                                c(Ind_Val[[x]],Ind_Emp[[x]],Ind_Ana[[x]]), 
-                                                                c(Ind_Emp[[x]],Ind_Ana[[x]],Ind_Val[[x]])))
+                                                                c(Ind_Val[[x]],Ind_Emp[[x]]),#,Ind_Ana[[x]]), 
+                                                                c(Ind_Emp[[x]],#Ind_Ana[[x]],
+                                                                  Ind_Val[[x]]))[-Ind_Ana[[x]]])
 Bias_Intra_Lo_RS <- lapply(1:length(Bias.Intra_Lo_RS), function(x) Bias.Intra_Lo_RS[[x]][,Ind_Cols[[x]]])
 
 #### 3.3 Select DGMs 4.1 & 4.2 ####
@@ -627,25 +645,25 @@ tabBiasIntraLo_4.2 <- cbind.data.frame(apply(BiasIntraLo_4.2[[1]], 1, function(x
     }else{NA}))
 
 # Discrete covariate
-tabBiasTrial_4.1a <- cbind(tabBiasTrial_4.1[seq(1,nrow(tabBiasTrial_4.1),3),],
-                           tabBiasTrial_4.1[seq(2,nrow(tabBiasTrial_4.1),3),],
-                           tabBiasTrial_4.1[seq(3,nrow(tabBiasTrial_4.1),3),])
-tabBiasIntraLo_4.1a <- cbind(tabBiasIntraLo_4.1[seq(1,nrow(tabBiasIntraLo_4.1),3),],
-                           tabBiasIntraLo_4.1[seq(2,nrow(tabBiasIntraLo_4.1),3),],
-                           tabBiasIntraLo_4.1[seq(3,nrow(tabBiasIntraLo_4.1),3),])
+tabBiasTrial_4.1a <- cbind(tabBiasTrial_4.1[seq(1,nrow(tabBiasTrial_4.1),3),1],
+                           tabBiasTrial_4.1[seq(2,nrow(tabBiasTrial_4.1),3),1],
+                           tabBiasTrial_4.1[seq(3,nrow(tabBiasTrial_4.1),3),2])
+tabBiasIntraLo_4.1a <- cbind(tabBiasIntraLo_4.1[seq(1,nrow(tabBiasIntraLo_4.1),3),1],
+                           tabBiasIntraLo_4.1[seq(2,nrow(tabBiasIntraLo_4.1),3),1],
+                           tabBiasIntraLo_4.1[seq(3,nrow(tabBiasIntraLo_4.1),3),2])
 
 # Continuous covariate
-tabBiasTrial_4.2a <- cbind(tabBiasTrial_4.2[seq(1,nrow(tabBiasTrial_4.2),3),],
-                           tabBiasTrial_4.2[seq(2,nrow(tabBiasTrial_4.2),3),],
-                           tabBiasTrial_4.2[seq(3,nrow(tabBiasTrial_4.2),3),])
-tabBiasIntraLo_4.2a <- cbind(tabBiasIntraLo_4.2[seq(1,nrow(tabBiasIntraLo_4.2),3),],
-                             tabBiasIntraLo_4.2[seq(2,nrow(tabBiasIntraLo_4.2),3),],
-                             tabBiasIntraLo_4.2[seq(3,nrow(tabBiasIntraLo_4.2),3),])
+tabBiasTrial_4.2a <- cbind(tabBiasTrial_4.2[seq(1,nrow(tabBiasTrial_4.2),3),1],
+                           tabBiasTrial_4.2[seq(2,nrow(tabBiasTrial_4.2),3),1],
+                           tabBiasTrial_4.2[seq(3,nrow(tabBiasTrial_4.2),3),2])
+tabBiasIntraLo_4.2a <- cbind(tabBiasIntraLo_4.2[seq(1,nrow(tabBiasIntraLo_4.2),3),1],
+                             tabBiasIntraLo_4.2[seq(2,nrow(tabBiasIntraLo_4.2),3),1],
+                             tabBiasIntraLo_4.2[seq(3,nrow(tabBiasIntraLo_4.2),3),2])
 
 
 colnames(tabBiasTrial_4.1a) <- colnames(tabBiasIntraLo_4.1a) <- 
   colnames(tabBiasTrial_4.2a) <- colnames(tabBiasIntraLo_4.2a) <- 
-  rep(SupSpaces, each = 2) 
+  SupSpaces 
 rownames(tabBiasTrial_4.1a) <- rownames(tabBiasIntraLo_4.1a) <- 
   rownames(tabBiasTrial_4.2a) <- rownames(tabBiasIntraLo_4.2a) <- 
   Names.Cols
@@ -657,21 +675,16 @@ tabBias4.2 <- rbind.data.frame(tabBiasTrial_4.2a, tabBiasIntraLo_4.2a)
 Effects <- c("Average", "Conditional")
 tabBiasDelta <- cbind.data.frame(rep(Names.Cols, times = 4), rbind(tabBias4.1, tabBias4.2))
 
-ATR.DGM <- c(rbind(paste0("\\multicolumn{", ncol(tabBiasDelta), "}{c}{", c("Discrete", "Continuous"), " covariate} \\\\ \n \\midrule \n"), c("")))
-ATR.Rules <- rep(paste0(c("", "\\midrule \n "), "\\multicolumn{", ncol(tabBiasDelta), "}{c}{", Effects, " Treatment Effect} \\\\ \n \\midrule \n ", 
-                        paste0("Method", paste0(" & ", "\\multicolumn{2}{l}{", SupSpaces, "}", collapse = ""), " \\\\ \n \\midrule \n  ",
-                               paste0(rep(c(" & \\multicolumn{1}{l}{$\\bm{\\delta}(\\bm{x})$} & \\multicolumn{1}{l}{$\\delta (\\bm{w}, \\bm{x})$}"), times = length(SupSpaces)), collapse = ""),
-                               "\\\\ \n)", c("", "\\midrule \n "))), times = 2)
-
-
-
+ATR.DGM <- c(rbind(paste0(c("", rep("\n \\midrule \n", 3)), "\\multicolumn{", ncol(tabBiasDelta), "}{c}{DGM", rep(c("4.1 Discrete", "4.2 Continuous"), each = 2), " covariate - ", rep(Effects, times = 2), " Treatment Effect} \\\\ \n", c("", rep("\\midrule \n", 3)))))
+ATR.Rules <- paste0("Method", paste0(" & ", "\\multicolumn{1}{l}{", SupSpaces, "}", collapse = ""), " \\\\ \n",
+                               paste0(c(rep(" & \\multicolumn{1}{l}{$\\bm{\\delta}(\\bm{x})$}", 2), "& \\multicolumn{1}{l}{$\\delta (\\bm{w}, \\bm{x})$} \\\\ \n \\midrule \n  "), collapse = "")
+                        )
+   
 AddToRow.BiasDelta <- list()
-AddToRow.BiasDelta$pos <- as.list(c(0, seq(from = length(Names.Cols), to = nrow(tabBiasDelta), by = length(Names.Cols))))
-AddToRow.BiasDelta$command <- c(paste0(ATR.DGM, ATR.Rules),
-                                paste0("\\multicolumn{", ncol(tabBiasDelta), "}{l}{Comp = Compensatory rule}", collapse = ""))
-
-  
-  
+AddToRow.BiasDelta$pos <- as.list(c(0, 0, seq(from = length(Names.Cols), to = nrow(tabBiasDelta)-1, by = length(Names.Cols))))
+AddToRow.BiasDelta$command <- c(ATR.Rules,
+                                ATR.DGM)
+                               
   
 Align.BiasDelta <- paste0("ll", paste0(rep("r",ncol(tabBiasDelta) - 1), collapse = ""), collapse = "")
 
