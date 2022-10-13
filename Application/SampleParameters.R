@@ -7,7 +7,6 @@ P3 <- ncol(X3)
 
 m0.3 <- rep(b0, P3);
 V0.3 <- matrix(B0, P3 , P3);
-
 Pars.3 <- EstimateParametersPG(X = X3, Y = Y12, nBurn = nBurn, nIt = nIt, Start = start, bMu0 = b0, bSigma0 = B0)
 Theta.3 <- Transform2Theta(BetaDrawPG = Pars.3[["bDrawPG"]], X = X3, Y = Y12,  Types = Types,
                            Values = Values[["RSBP_C"]], Range = Ranges[["RSBP_C"]],# Ranges = Ranges[["RSBP_C"]], Values = Values[["RSBP_C"]],
@@ -22,5 +21,6 @@ for(type in 1:nrow(Types)){
   }
   
 
-save(Pars.3, Theta.3, Decisions.3, file = "Workspaces/Application3.RData")
+save(Pars.3, Theta.3, Decisions.3,
+     file = "Workspaces/Application3.RData")
 
