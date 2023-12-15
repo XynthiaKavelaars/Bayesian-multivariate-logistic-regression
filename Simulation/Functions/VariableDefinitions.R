@@ -1,19 +1,28 @@
-#### Variable definitions ####
+# Variable Definitions
 
-#### 1. Simulation parameters ####
-nSim <- 1e3 + 1e2		# Number of samples to run
-nSim_Eval <- 1e3		# Number of samples to evaluate (lower than nSim, so non-converging samples can be excluded)
-nMax <- 2e3			# Maximum sample size per treatment group
+# Simulation parameters 
+nSim <- 1e3+1e2 # Number of simulations to run
+nSim_eval <- 1e3  # Number of simulations to evaluate
+nBurn <- 1e3			# No. of burnin iterations
+nIt <- 1e4			# No. of iterations
+Start <- c(0,0.5)		# Starting values for chains 1 and 2
+GR.Cut <- 1.10			# Cutoff value for (non-)convergence
 
-#### 2. Covariate data ####
-Interaction <- TRUE		# Include interaction between x and treatment
-P <- 4				# Number of covariates
-nDgm <- 8			# Number of data generating mechanisms
+# Prior hyperparameters
+b0 <- 0       # Prior mean of regression coefficient (univariate and multivariate logistic regression)
+B0 <- 1e-1    # Prior precision of regression coefficient (univariate and multivariate logistic regression)
+a0 <- 1e-2    # Prior observation per response category (multivariate Bernoulli)
+
+# Covariate data
+P <- 4		  	# Number of covariates
+nDgm <- 8 # Number of data generating mechanisms
+Rho <- c(-0.20,0,0.20)
+names(Rho) <- c("Neg", "Zero", "Pos")
 set.seed(2021)
+Discrete <- TRUE
 
-MeasurementLevel <- rep(c("Discrete", "Continuous"), 1/2 * nDgm)
-Q <- 4;				# Number of joint response categories
-K <- log2(Q);			# Number of outcome variables
+K <- 1:3;			  # Number of outcome variables
+Q <- 2^(K);	# Number of joint response categories
 
 #### 2.1 Covariate data - Discrete ####
 pXD <- c(0.5,0.5)		# Probability of x
@@ -35,54 +44,39 @@ Ranges[["Discrete"]] <- list(Trial = c(0, 1),
 # Values defining subpopulations
 Values <- list()
 Values[["Continuous"]] <- list(Trial = c(0),
-				Intra_Lo = c(-1),
-				Intra_Hi = c( 1))
+                               Intra_Lo = c(-1),
+                               Intra_Hi = c(1))
 Values[["Discrete"]] <- list(Trial = c(0.5),
-				     Intra_Lo = c(0),
-				     Intra_Hi = c(1))
+                             Intra_Lo = c(0), 
+                             Intra_Hi = c(1))
 
-# Probability of discrete covariate
 pX <- list()
 pX[["Trial"]] <- pXD
 pX[["Intra_Lo"]] <- pXD[1]
 pX[["Intra_Hi"]] <- pXD[2]
 
-#### 3. Parameters Gibbs sampler ####
-nBurn <- 1e3			# No. of burnin iterations
-nIt <- 1e4			# No. of iterations
-Start <- c(0,0.5)		# Starting values for chains 1 and 2
-GR.Cut <- 1.10			# Cutoff value for (non-)convergence
+#### 3. Decision-making ####
+# Weights for compensatory rule
+Weights <- list(1, 
+                c(0.75, 0.25),
+                c(0.50,0.25,0.25))
 
-# Prior parameters 
-b0 <- 0;			# Prior mean regression coefficient
-B0 <- 1e-2;			# Prior precision of regression coefficients
-A0 <- rep(0,Q)			# Prior parameters multivariate Bernoulli distribution
+nMax <- 1e3 # Maximum sample size per treatment group
+alpha <- 0.05 # Type I error rate
+pwr <- 0.80 # Statistical power
+Rules <- c("Single", "All", "Any", "Comp")
+RuleNames <- c("Single", "All", "Any", "Compensatory")
 
-#### 3. Parameter superiority decision ####
-weights <- c(0.50,0.50)		# Weights compensatory rule
-Alpha <- 0.05			# Type I error rate
+# Cutoff for superiority
+pCut <- lapply(K, function(k){
+  x <- matrix(NA, nrow = length(Rules), ncol = 2)
+  x[which(Rules == "Single"),] <- c(0, 1 - alpha);
+  x[which(Rules == "All"),] <- c(0, 1 - alpha);
+  x[which(Rules == "Any"),] <- c(0, 1 - (alpha/k));
+  x[which(Rules == "Comp"),] <- c(0, 1 - alpha);
+  return(x)})
 
-#### 4. Types of populations ####
-# Specify conditions per data generating mechanism as function of the measurement level,  method to estimate parameters, population of interest, and scope of data
-MeasurementLevels <- c("Discrete", "Continuous")
-Methods <- c("MvB", "Value", "Empirical", "Analytical")
 Populations <- c("Trial", "Intra_Lo")
-Scopes <- c("Old")
-MethodFit <- c("PG")
-TypesSpace <- as.data.frame(t(expand.grid(MeasurementLevels, Methods, Populations, Scopes, stringsAsFactors = FALSE)))
-Exclude <- lapply(TypesSpace, function(x) 
-  any(c("Intra_Hi", "Extra_Lo", "Extra_Hi") %in% x) | 
-    any(c("New") %in% x) |
-    all(c("Discrete", "Analytical", "Intra_Lo") %in% x) | 
-    all(c("Discrete", "Empirical", "Intra_Lo") %in% x))
- 
 
-Types <- t(TypesSpace[,which(do.call(rbind, Exclude) == FALSE)])
-colnames(Types) <- rownames(TypesSpace) <- c("MeasurementLevels", "Methods", "Populations", "Scopes")
-
-Seeds <- matrix(sample(1:1e4, 9 * nDgm, replace = FALSE),
-nrow = nDgm)
-
-Rules <- c("Any", "All", "Compensatory")		# Name rules
-TestSide <- c("Comp_rs", "All_rs", "Any_rs")		# Names of performed tests
-
+Seeds <- array(sample(1:1e4, nDgm * max(K) * length(Rho) * length(Rules), replace = FALSE),
+                dim = c(nDgm, max(K), length(Rho), length(Rules)))

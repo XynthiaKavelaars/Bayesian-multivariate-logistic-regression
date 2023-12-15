@@ -1,37 +1,44 @@
-#### Generate data ####
-rm(list=ls())
+#### Run simulation ####
+rm(list = ls())
+#setwd('')
+wd <- getwd()
 
 #### 0. Initialization ####
-#### 0.1 Load packages ####
-packages <- c('MCMCpack', 'coda', 'pgdraw', 'TruncatedNormal', 'pracma', 'msm', 'abind', 'foreach', 'doParallel', 'nnet', 'xtable')
+# Load packages after installing if needed
+RequiredPackages <- c('MCMCpack', 'coda', 'pgdraw', 'TruncatedNormal', 'pracma', 'msm', 'abind', 'foreach', 'doParallel', 'nnet', 'xtable')
+package.check <- lapply(RequiredPackages, function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+  }})
 
-package.check <- lapply(packages, function(x) {
-    if (!require(x, character.only = TRUE)) {
-      install.packages(x, dependencies = TRUE)
-      library(x, character.only = TRUE)
-    }})
+# Initiate parallel computing
+nCores <- detectCores() - 1
+registerDoParallel(cores = nCores)
 
-#### 0.2 Initialize parallellization ####
-nCores <- detectCores()
-cl <- makeCluster(nCores - 1)
-registerDoParallel(cl)
-
-
-#### 0.3 Set working directory ####
-setwd('')
-
-#### 0.4 Load functions ####
-source("Functions/Functions_Transformation.R")
+# Load functions 
 source("Functions/Functions_Simulation.R")
 source("Functions/Functions_SampleSize.R")
-source("Functions/VariableDefinitions.R")
-source("Functions/DataGeneratingMechanisms.R")
-source("Functions/ComputeSampleSize.R")
+source("Functions/Functions_Transformation.R")
 
+# Load variable definitions and data generating mechanisms
+source("Functions/VariableDefinitions.R")
+source("Functions/DefineDataGeneratingMechanisms.R")
+
+# Compute required sample sizes 
+source("Functions/ComputeSampleSizes.R")
 
 #### 1. Run simulation ####
-source("SampleParameters.R")
-source("Evaluate.R")
-source("MakeTableFigure.R")
-source("TextualOutput.R")
+source("SimulateMvLR.R")
+source("SimulateUvLR.R")
+source("SimulateMvB.R")
 
+#### 2. Evaluate results ####
+source("Evaluate.R")
+
+#### 3. Make tables and figures ####
+source("MakeTable.R")
+
+#### 4. Compute power example ####
+source("Functions/Functions_SampleSize.R")
+source("Functions/Functions_Power.R")
+source("ComputePowerExample.R")
