@@ -17,11 +17,8 @@ package.check <- lapply(packages, function(x) {
     }})
 
 # Set working directory
-setwd('')
+try(setwd("C:/Users/xynni/surfdrive/Werk/Bayesian Adaptive Clinical Trials/Project 2/Submitted version - Multivariate Behavioral Research/Revision V1/Research archive/Application"))
 
-nCores <- detectCores()
-cl <- makeCluster(nCores - 1)
-registerDoParallel(cl) 
 
 Dataset <- read.csv("IST_Data.csv")
 

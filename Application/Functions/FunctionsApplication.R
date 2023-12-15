@@ -26,7 +26,7 @@ EstimateParametersPG <- function(X, Y, nBurn, nIt, Start, bMu0, bSigma0){
     
     ConvergencePG <- gelman.diag(ChainsPG)$mpsrf
     bDrawPG <- Chain1PG[["bDrawPG"]]  
-    res <- list(ConvergencePG = ConvergencePG, bDrawPG = bDrawPG)
+    res <- list(ConvergencePG = ConvergencePG, bDrawPG = bDrawPG, ChainsPG = ChainsPG)
   },
   warning = function(warn) {
     print(paste("Warning: ", warn))

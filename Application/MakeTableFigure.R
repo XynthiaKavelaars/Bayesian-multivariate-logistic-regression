@@ -35,10 +35,10 @@ for(i in 1:nrow(pReject.3)){
 }
 
 #### 1.1 Range of blood pressure ####
-tab.pReject.Range.3 <- tab.pReject.3[pReject.3[,"Methods"] %in% c("Reference", "Empirical") & pReject.3[,"Populations"] %in% c("Trial", "Lo", "Hi"),]
+tab.pReject.Range.3 <- tab.pReject.3[pReject.3[,"Methods"] %in% c("mB", "mLR") & pReject.3[,"Populations"] %in% c("Trial", "Lo", "Hi"),]
 AddToRow.pReject.Range.3 <- list()
 rows <- sapply(Populations[which(Populations %in% Types.Range[,"Populations"])], function(pop) sum(Types.Range[,"Populations"] == pop))
-AddToRow.pReject.Range.3[["pos"]] <- as.list(cumsum(c(0, 0, rows[-length(rows)])))
+AddToRow.pReject.Range.3[["pos"]] <- as.list(c(cumsum(c(0, 0, rows[-length(rows)]))), nrow(tab.pReject.Range.3))
 AddToRow.pReject.Range.3[["command"]] <- c(paste0("Method  & & \\multicolumn{1}{l}{$\\bm{\\delta}(Bp)$} & \\multicolumn{1}{l}{pp} ", paste0(" & ", names.Rules[1:2], collapse = ""), 
                                                   " & & \\multicolumn{1}{l}{$\\delta(\\bm{w},Bp)$} & \\multicolumn{1}{l}{pp} ", paste0(" & ", names.Rules[3], collapse = ""), " \\\\\n ", collapse = ""),
 
@@ -47,12 +47,16 @@ paste0("\\midrule \n \\multicolumn{4}{l}{\\textbf{", names.Populations[which(Pop
                                                   range.Populations[[3]][which(Populations %in% Types.Range[,"Populations"])], ") 
                                                   } & \\multicolumn{", ncol(tab.pReject.Range.3) - 4, "}{l}{$n_{H+A} = ", nRange[["RSBP_C"]][which(Populations %in% Types.Range[,"Populations"]),"nE"], "$, $n_{A} = ", 
        nRange[["RSBP_C"]][which(Populations %in% Types.Range[,"Populations"]),"nC"],"$} \\\\\n " , c("", rep("\\midrule \n", length(which(Populations %in% Types.Range[,"Populations"]))-1))
-                                                  ))
+                                                  ),
+paste0("\\midrule \n 
+        \multicolumn{", ncol(tab.pReject.Range.3),"}{l}{mB = Multivariate Bernoulli analysis} \\\\\n
+        \multicolumn{", ncol(tab.pReject.Range.3),"}{l}{mLR= Multivariate logistic regression} \\\\\n")
+)
 
 Align.pReject.Range.3 <- paste0("ll", paste0(rep("r", ncol(tab.pReject.Range.3) - 1), collapse = ""))
 
 print(xtable(tab.pReject.Range.3, 
-             caption="Average and conditional treatment differences in the IST-data, by range of blood pressure.",
+             caption="Average and conditional average treatment effects (ATE and CATE respectively) in the IST-data, by interval of blood pressure.",
              label="tab:Application.Range_rbsp", align=Align.pReject.Range.3),
       add.to.row=AddToRow.pReject.Range.3, caption.placement="top", 
       include.colnames=FALSE, include.rownames=FALSE,
@@ -73,7 +77,7 @@ AddToRow.pReject.Value.3[["command"]] <- c(paste0("Value  & & \\multicolumn{1}{l
 Align.pReject.Value.3 <- paste0("ll", paste0(rep("r", ncol(tab.pReject.Value.3) - 1), collapse = ""))
 
 print(xtable(tab.pReject.Value.3, 
-             caption="Conditional treatment differences in the IST-data, by value of blood pressure.",
+             caption="Conditional average treatment effects in the IST-data, by value of blood pressure.",
              label="tab:Application.Value_rbsp", align=Align.pReject.Value.3),
        add.to.row=AddToRow.pReject.Value.3, caption.placement="top", 
       include.colnames=FALSE, include.rownames=FALSE,
@@ -135,24 +139,26 @@ delta.Emp <- lapply(1:(length(xPoints)-1), function(x) {
   return(list(mu=mu, se=se))
 })
 
-thetaAna.E <- lapply(1:(length(xPoints)-1), function(x) {
-  theta <- EstimateThetaAnalytical(BetaPG = Pars.3[["bDrawPG"]], X = X3, Trt = 1, RangeX = xPoints[x+0:1] * sdBp)
-theta
-})
+#thetaAna.E <- lapply(1:(length(xPoints)-1), function(x) {
+#  theta <- EstimateThetaAnalytical(BetaPG = Pars.3[["bDrawPG"]], X = X3, Trt = 1, RangeX = xPoints[x+0:1] * sdBp)
+#theta
+#})
 
-thetaAna.C <- lapply(1:(length(xPoints)-1), function(x) {
-  theta <- EstimateThetaAnalytical(BetaPG = Pars.3[["bDrawPG"]], X = X3, Trt = 0, RangeX = xPoints[x+0:1] * sdBp)
-theta
-})
+#thetaAna.C <- lapply(1:(length(xPoints)-1), function(x) {
+#  theta <- EstimateThetaAnalytical(BetaPG = Pars.3[["bDrawPG"]], X = X3, Trt = 0, RangeX = xPoints[x+0:1] * sdBp)
+#theta
+#})
 
-delta.Ana <- lapply(1:(length(xPoints)-1), function(x) {
-  delta <- do.call(rbind, Map("-", thetaAna.E[[x]], thetaAna.C[[x]]))
-  mu <- colMeans(delta)
-  se <- apply(delta, 2, function(x) sd(x))
-  return(list(mu=mu, se=se))
-})
+#delta.Ana <- lapply(1:(length(xPoints)-1), function(x) {
+#  delta <- do.call(rbind, Map("-", thetaAna.E[[x]], thetaAna.C[[x]]))
+#  mu <- colMeans(delta)
+#  se <- apply(delta, 2, function(x) sd(x))
+#  return(list(mu=mu, se=se))
+#})
 
-save(thetaEmp.E, thetaEmp.C, thetaAna.E, thetaAna.C, delta.Emp, delta.Ana, file = "Workspaces/Application_figure.RData")
+save(thetaEmp.E, thetaEmp.C, #thetaAna.E, #thetaAna.C, 
+     delta.Emp, # delta.Ana, 
+     file = "Workspaces/Application_figure.RData")
 
 load("Workspaces/Application_figure.RData")
 
@@ -170,7 +176,7 @@ text(x = 0.5, y = 0.25, labels = "Recurrent stroke", pos = 3, cex = 2)
 
 par(mar = c(4,4,2,1), family = "Times")
 plot(NULL, xlim = c(RoundChoose(min(xPoints * sdBp + meanBp),10,0), RoundChoose(max(xPoints * sdBp + meanBp),10,1)), ylim = c(-0.3,0.3), 
-     type = "l", main = "Stratification" #"Recurring stroke"
+     type = "l", main = "Stratified analysis" #"Recurring stroke"
      , xlab = "Blood pressure", ylab = bquote(theta[H+A] - theta[A]), las = 1)
 for(i in 1:(length(xPoints)-1)){
   segments(x0 = xPoints[i] * sdBp + meanBp, x1= xPoints[i+1] * sdBp + meanBp, y0 = delta.Mvb[[i]][["mu"]][1], y1 = delta.Mvb[[i]][["mu"]][1], lty = 1)
@@ -184,7 +190,7 @@ for(i in 1:(length(xPoints)-1)){
 abline(h=0,lty=3)
 
 plot(NULL, xlim = c(RoundChoose(min(xPoints * sdBp + meanBp),10,0), RoundChoose(max(xPoints * sdBp + meanBp),10,1)), ylim = c(-0.3,0.3), 
-     type = "l", main = "Empirical marginalization" #"Recurring stroke"
+     type = "l", main = "Logistic regression" #"Recurring stroke"
      , xlab = "Blood pressure", ylab = bquote(theta[H+A] - theta[A]), las = 1)
 for(i in 1:(length(xPoints)-1)){
   #segments(x0 = xPoints[i] * sdBp + meanBp, x1= xPoints[i+1] * sdBp + meanBp, y0 = delta.Mvb[[i]][["mu"]][1], y1 = delta.Mvb[[i]][["mu"]][1], lty = 1)
@@ -203,7 +209,7 @@ text(x = 0.5, y = 0.25, labels = "Dependency", pos = 3, cex = 2)
 
 par(mar = c(4,4,2,1), family = "Times")     
 plot(NULL, xlim = c(RoundChoose(min(xPoints * sdBp + meanBp),10,0), RoundChoose(max(xPoints * sdBp + meanBp),10,1)), ylim = c(-0.3,0.3), 
-     type = "l", main = "Stratification" #"Dependency"
+     type = "l", main = "Stratified analysis" #"Dependency"
      ,  xlab = "Blood pressure", ylab = bquote(theta[H+A] - theta[A]), las = 1)
 for(i in 1:(length(xPoints)-1)){
   segments(x0 = xPoints[i] * sdBp + meanBp, x1= xPoints[i+1] * sdBp + meanBp, y0 = delta.Mvb[[i]][["mu"]][2], y1 = delta.Mvb[[i]][["mu"]][2], lty = 1)
@@ -216,7 +222,7 @@ for(i in 1:(length(xPoints)-1)){
 abline(h=0, lty=3)
 
 plot(NULL, xlim = c(RoundChoose(min(xPoints * sdBp + meanBp),10,0), RoundChoose(max(xPoints * sdBp + meanBp),10,1)), ylim = c(-0.3,0.3), 
-     type = "l", main = "Empirical marginalization" #"Dependency"
+     type = "l", main = "Logistic regression" #"Dependency"
       , xlab = "Blood pressure", ylab = bquote(theta[H+A] - theta[A]), las = 1)
 for(i in 1:(length(xPoints)-1)){
   #segments(x0 = xPoints[i] * sdBp + meanBp, x1= xPoints[i+1] * sdBp + meanBp, y0 = delta.Mvb[[i]][["mu"]][2], y1 = delta.Mvb[[i]][["mu"]][2], lty = 1)
@@ -234,24 +240,71 @@ abline(h=0, lty=3)
 dev.off()
 
 
+#### Traceplot ####
+postscript("Plots/Traceplot.eps", width = 6.5, height = 8, horizontal = FALSE, font = "Times", family = "sans")
+layout(matrix(1:20,nrow=5,ncol=4,byrow=FALSE), heights = c(1,6,6,6,6), widths = c(1,6,6,6))
+par(mar=rep(0.01,4))
+plot(NULL, xlim=c(0,1), ylim = c(0,1), bty="n", xaxt="n", yaxt="n")
+
+plot(NULL, xlim=c(0,1), ylim = c(0,1), bty="n", xaxt="n", yaxt="n")
+text(expression(beta[1]^q), x=0.5, y=0.5)
+
+plot(NULL, xlim=c(0,1), ylim = c(0,1), bty="n", xaxt="n", yaxt="n")
+text(expression(beta[2]^q), x=0.5, y=0.5)
+
+plot(NULL, xlim=c(0,1), ylim = c(0,1), bty="n", xaxt="n", yaxt="n")
+text(expression(beta[3]^q), x=0.5, y=0.5)
+
+plot(NULL, xlim=c(0,1), ylim = c(0,1), bty="n", xaxt="n", yaxt="n")
+text(expression(beta[4]^q), x=0.5, y=0.5)
+
+plot(NULL, xlim=c(0,1), ylim = c(0,1), bty="n", xaxt="n", yaxt="n")
+text("q=1", x=0.5, y=0.5)
+
+par(mar=c(3,3,1,1))
+for(i in 1:4){
+  plot(as.vector(Pars.3[["ChainsPG"]][[1]][,i]), type = "l", xlab = "Iterations", ylab = " ", col = "#333333", las=1)
+  lines(as.vector(Pars.3[["ChainsPG"]][[2]][,i]), col = "#C0C0C0")  
+}
+
+par(mar=rep(0.01,4))
+plot(NULL, xlim=c(0,1), ylim = c(0,1), bty="n", xaxt="n", yaxt="n")
+text("q=2", x=0.5, y=0.5)
 
 
-postscript("Plots/Application.eps", width = 6.5, height = 4, horizontal = FALSE, font = "Times")
-layout(matrix(c(1,2,3,3), nrow = 2, byrow = TRUE), heights = c(5,2))
-par(mar = c(4,4,2,1), family = "Times")
-plot(x = xPoints[-1] * sdBp + meanBp, y = delta.yPoints[,1], xlim = c(RoundChoose(min(xPoints[-1] * sdBp + meanBp),10,0), RoundChoose(max(xPoints[-1] * sdBp + meanBp),10,1)), ylim = c(-0.5,0.5), 
-     type = "l", main = "Recurring stroke", xlab = "Blood pressure", ylab = bquote(theta[H+A] - theta[A]), las = 1)
-lines(x = xPoints[-1] * sdBp + meanBp, y = delta.Emp[,1], lty = 2)
-lines(x = xPoints[-1] * sdBp + meanBp, y = delta.Ana[,1], lty = 3)
-  plot(x = xPoints[-1] * sdBp + meanBp, y = delta.yPoints[,2], xlim = c(RoundChoose(min(xPoints[-1] * sdBp + meanBp),10,0), RoundChoose(max(xPoints[-1] * sdBp + meanBp),10,1)), ylim = c(-0.5,0.5), 
-       type = "l", main = "Dependency",  xlab = "Blood pressure", ylab = bquote(theta[H+A] - theta[A]), las = 1)
-  lines(x = xPoints[-1] * sdBp + meanBp, y = delta.Emp[,2], lty = 2)
-  lines(x = xPoints[-1] * sdBp + meanBp, y = delta.Ana[,2], lty = 3)
-  
-  par(mar = rep(0.01, 4))
-  plot.new()
-  legend(x = "center", legend = c("Reference", "Empirical", "Analytical"), lty = 1:3, ncol = 3) #col = c("black", "red", "darkgreen"))
-  dev.off()
+par(mar=c(3,3,1,1))
+for(i in 5:8){
+  plot(as.vector(Pars.3[["ChainsPG"]][[1]][,i]), type = "l", xlab = "Iterations", ylab = " ", col = "#333333", las=1)
+  lines(as.vector(Pars.3[["ChainsPG"]][[2]][,i]), col = "#C0C0C0")  
+}
+
+par(mar=rep(0.01,4))
+plot(NULL, xlim=c(0,1), ylim = c(0,1), bty="n", xaxt="n", yaxt="n")
+text("q=3", x=0.5, y=0.5)
+
+par(mar=c(3,3,1,1))
+for(i in 9:12){
+  plot(as.vector(Pars.3[["ChainsPG"]][[1]][,i]), type = "l", xlab = "Iterations", ylab = " ", col = "#333333", las=1)
+  lines(as.vector(Pars.3[["ChainsPG"]][[2]][,i]), col = "#C0C0C0")  
+}
+
+dev.off()
+#postscript("Plots/Application.eps", width = 6.5, height = 4, horizontal = FALSE, font = "Times")
+#layout(matrix(c(1,2,3,3), nrow = 2, byrow = TRUE), heights = c(5,2))
+#par(mar = c(4,4,2,1), family = "Times")
+#plot(x = xPoints[-1] * sdBp + meanBp, y = delta.yPoints[,1], xlim = c(RoundChoose(min(xPoints[-1] * sdBp + meanBp),10,0), RoundChoose(max(xPoints[-1] * sdBp + meanBp),10,1)), ylim = c(-0.5,0.5), 
+#     type = "l", main = "Recurring stroke", xlab = "Blood pressure", ylab = bquote(theta[H+A] - theta[A]), las = 1)
+#lines(x = xPoints[-1] * sdBp + meanBp, y = delta.Emp[,1], lty = 2)
+#lines(x = xPoints[-1] * sdBp + meanBp, y = delta.Ana[,1], lty = 3)
+#  plot(x = xPoints[-1] * sdBp + meanBp, y = delta.yPoints[,2], xlim = c(RoundChoose(min(xPoints[-1] * sdBp + meanBp),10,0), RoundChoose(max(xPoints[-1] * sdBp + meanBp),10,1)), ylim = c(-0.5,0.5), 
+#       type = "l", main = "Dependency",  xlab = "Blood pressure", ylab = bquote(theta[H+A] - theta[A]), las = 1)
+#  lines(x = xPoints[-1] * sdBp + meanBp, y = delta.Emp[,2], lty = 2)
+#  lines(x = xPoints[-1] * sdBp + meanBp, y = delta.Ana[,2], lty = 3)
+#  
+#  par(mar = rep(0.01, 4))
+#  plot.new()
+#  legend(x = "center", legend = c("Reference", "Empirical", "Analytical"), lty = 1:3, ncol = 3) #col = c("black", "red", "darkgreen"))
+#  dev.off()
   
   #### Descriptives ####
 T0_freq <- prop.table(table(Data[Data$TRT == 0, c("STRK14", "DEP6")]))
